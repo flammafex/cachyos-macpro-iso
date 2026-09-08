@@ -8,14 +8,11 @@ iso_application="CachyOS Mac Pro 6,1 Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
 buildmodes=('iso')
-## GRUB
-bootmodes=('bios.syslinux' 'uefi.grub')
-## systemd-boot
-#bootmodes=('bios.syslinux' 'uefi.systemd-boot')
+bootmodes=('uefi.systemd-boot')
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')
+airootfs_image_tool_options=('-comp' 'gzip' '-b' '1M')
 file_permissions=(
   ["/etc/shadow"]="0:0:400"
   ["/etc/gshadow"]="0:0:400"
@@ -28,8 +25,9 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/dmcheck"]="0:0:755"
   ["/usr/local/bin/calamares-online.sh"]="0:0:755"
-  ["/usr/local/bin/macpro-postinstall.sh"]="0:0:755"
-  ["/usr/local/bin/macpro-installer-launch.sh"]="0:0:755"
+  ["/usr/local/bin/macpro-calamares-root.sh"]="0:0:755"
+  ["/usr/local/bin/macpro-stage-packages.sh"]="0:0:755"
+  ["/usr/local/bin/macpro-verify-packages.sh"]="0:0:755"
   ["/usr/local/bin/remove-nvidia"]="0:0:755"
   ["/usr/local/bin/removeun"]="0:0:755"
   ["/usr/local/bin/removeun-online"]="0:0:755"
@@ -37,10 +35,6 @@ file_permissions=(
   ["/usr/local/bin/nvidia-module-loader"]="0:0:755"
   ["/usr/local/bin/pkexec-wrapper"]="0:0:755"
   ["/etc/profile.d/no-reboot.sh"]="0:0:644"
-  ["/etc/modprobe.d/macpro-gpu.conf"]="0:0:644"
-  ["/etc/modprobe.d/macpro-audio.conf"]="0:0:644"
   ["/etc/sysctl.d/99-macpro.conf"]="0:0:644"
-  ["/etc/modules-load.d/applesmc.conf"]="0:0:644"
-  ["/etc/modules-load.d/macpro-sound.conf"]="0:0:644"
   ["/etc/ufw/applications.d/ssh.ufw"]="0:0:644"
 )

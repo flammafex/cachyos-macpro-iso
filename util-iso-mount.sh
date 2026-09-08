@@ -25,7 +25,9 @@ check_umount() {
 }
 
 umount_fs(){
-    if [[ -n ${FS_ACTIVE_MOUNTS[@]} ]]; then
+    local mount_folders i
+
+    if [[ ${FS_ACTIVE_MOUNTS+x} && ${#FS_ACTIVE_MOUNTS[@]} -gt 0 ]]; then
         info "overlayfs umount: [%s]" "${FS_ACTIVE_MOUNTS[@]}"
         #umount "${FS_ACTIVE_MOUNTS[@]}"
         for i in "${FS_ACTIVE_MOUNTS[@]}"
@@ -34,9 +36,11 @@ umount_fs(){
             check_umount $i
         done
         unset FS_ACTIVE_MOUNTS
-        rm -rf "${mnt_dir}/work"
+        if [[ -n ${mnt_dir:-} ]]; then
+            rm -rf -- "${mnt_dir}/work"
+        fi
     fi
-    mount_folders=$(grep "${work_dir}" /proc/mounts | awk '{print$2}' | sort -r)
+    mount_folders=$(grep -F -- "${work_dir}" /proc/mounts | awk '{print$2}' | sort -r || true)
     for i in $mount_folders
     do
         info "umount folder: [%s]" "$i"

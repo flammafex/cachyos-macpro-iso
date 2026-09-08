@@ -76,4 +76,23 @@ done
 trap 'trap_exit INT "$(gettext "Aborted by user! Exiting...")"' INT
 trap 'trap_exit USR1 "$(gettext "An unknown error has occurred. Exiting...")"' ERR
 
-run_build "${build_list_iso}"
+build_status=0
+# Keep run_build out of conditional-command context.  Bash suppresses
+# errexit/ERR handling for a function body reached through `if`, which could
+# otherwise let a preflight failure continue into mkarchiso and finalization.
+saved_err_trap=$(trap -p ERR)
+trap - ERR
+set +e
+(
+    set -euo pipefail
+    run_build "${build_list_iso}"
+)
+build_status=$?
+set -e
+if [[ -n "$saved_err_trap" ]]; then
+    eval "$saved_err_trap"
+fi
+if (( build_status != 0 )); then
+    error "ISO build failed; no artifact finalization or success state was produced"
+    exit "$build_status"
+fi

@@ -1,0 +1,36 @@
+pkgname=macpro61-support
+pkgver=1
+pkgrel=5
+pkgdesc='Durable Mac Pro 6,1 boot, fan, and hardware policy'
+arch=('x86_64')
+license=('GPL')
+depends=('linux-macpro61' 'macfanctld' 'systemd>=258' 'util-linux' 'coreutils' 'bash' 'kmod')
+
+package() {
+    local files="$startdir/files"
+
+    install -Dm755 "$files/usr/lib/macpro61-support/macpro61-fan-preflight" \
+        "$pkgdir/usr/lib/macpro61-support/macpro61-fan-preflight"
+    install -Dm755 "$files/usr/lib/macpro61-support/macpro61-bootctl" \
+        "$pkgdir/usr/lib/macpro61-support/macpro61-bootctl"
+
+    for file in \
+        macpro-audio.conf \
+        macpro-gpu.conf; do
+        install -Dm644 "$files/etc/modprobe.d/$file" "$pkgdir/etc/modprobe.d/$file"
+    done
+    for file in applesmc.conf macpro-sound.conf; do
+        install -Dm644 "$files/etc/modules-load.d/$file" "$pkgdir/etc/modules-load.d/$file"
+    done
+
+    for hook in "$files"/etc/pacman.d/hooks/*.hook; do
+        install -Dm644 "$hook" "$pkgdir/etc/pacman.d/hooks/${hook##*/}"
+    done
+    install -Dm644 \
+        "$files/etc/systemd/system/macfanctld.service.d/10-macpro61-support.conf" \
+        "$pkgdir/etc/systemd/system/macfanctld.service.d/10-macpro61-support.conf"
+
+    # Keep the rollback directory package-owned even before the first
+    # successful preservation operation.
+    install -Dm644 /dev/null "$pkgdir/var/lib/macpro61-support/rollback/.keep"
+}

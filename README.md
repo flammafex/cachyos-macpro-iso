@@ -84,13 +84,20 @@ cd cachyos-macpro-iso
 # Takes 30-90 min on a Mac Pro
 ```
 
-### Step 3: Set up the local repo
+### Step 3: Build the Mac Pro support packages
+
+```bash
+./scripts/build-macfanctld.sh
+./scripts/build-support.sh
+```
+
+### Step 4: Set up the local repo
 
 ```bash
 ./scripts/setup-local-repo.sh
 ```
 
-### Step 4: Build the ISO
+### Step 5: Build the ISO
 
 ```bash
 sudo pacman -S archiso mkinitcpio-archiso squashfs-tools grub --needed
@@ -104,6 +111,8 @@ sudo pacman-key --lsign-key 882DCFE48E2051D48E2562ABF3B607488DB35A47
 The kernel has KVM built-in. See [docs/kvm-macos.md](../linux-mac/docs/kvm-macos.md) for running macOS Tahoe in a VM with ~2-5% CPU overhead.
 
 **Current state:** Phase 1 (software-rendered QXL display) — usable for CLI and light desktop work. Phase 3 (GPU passthrough via PVG) is on the roadmap in `linux-mac/docs/pvg-linux.md`.
+
+**Experimental Monterey KVM:** See [docs/monterey-kvm.md](docs/monterey-kvm.md) for the locally validated baseline and the unvalidated graphics plan.
 
 ## Hardware Support
 
@@ -141,15 +150,16 @@ The Mac Pro 6,1 uses a **Cirrus Logic CS4208** audio codec behind an Intel C600/
 | `modprobe.d/macpro-audio.conf` | **NEW** — Mac Pro 6,1 audio pin layout + jack detect fix |
 | `modules-load.d/macpro-sound.conf` | **NEW** — Load Cirrus Logic CS4208 codec module |
 | `local-repo/` | Build scripts to populate with kernel packages |
-| `packages_desktop.x86_64` | Added `macfanctld` |
+| `packages_desktop.x86_64` | Added `macfanctld` and `macpro61-support` |
 | EFI boot entries | Added `03-macpro61.conf` + `04-macpro61-fallback.conf` |
 | `systemd/system/` | Added `sshd.service`, `macpro-fancontrol.service`, `applesmc_load.service` |
 | `modules-load.d/` | Added `applesmc.conf` |
 | `ufw/applications.d/` | Added SSH UFW rule |
 | Post-install | `macpro-postinstall.sh` — swaps kernel, configures boot, fan control |
 | Installer wrapper | `macpro-installer-launch.sh` — runs Calamares then applies fixes |
+| Calamares storage/boot flow | Plain ext4 `/` plus FAT `/boot`; the package finalizer owns systemd-boot writes |
 | `profiledef.sh` | Added new scripts to file_permissions |
-| Build scripts | `scripts/build-kernel.sh`, `setup-local-repo.sh`, `build-iso.sh` |
+| Build scripts | `scripts/build-kernel.sh`, `build-macfanctld.sh`, `build-support.sh`, `setup-local-repo.sh`, `build-iso.sh` |
 
 ## Testing Checklist
 
@@ -161,7 +171,7 @@ The Mac Pro 6,1 uses a **Cirrus Logic CS4208** audio codec behind an Intel C600/
 - [ ] `reboot` command warns and powers off instead
 - [ ] Calamares installer runs successfully
 - [ ] Installed system boots with `linux-macpro61` kernel
-- [ ] Installed system has macfanctld, no-reboot alias, ESP sync hook
+- [ ] Installed system has macfanctld, no-reboot alias, and a `/boot` ESP
 - [ ] `pacman -Syu` can update from [macpro] repo
 - [ ] Cold boot (poweroff + power on) restores GPU
 - [ ] Audio works (internal speakers + headphone jack)

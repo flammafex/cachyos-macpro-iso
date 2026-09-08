@@ -1,0 +1,13 @@
+# remove from airootfs!
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux-cachyos
+
+[Action]
+Description = Removing linux-cachyos boot files from the live root...
+When = PostTransaction
+Depends = coreutils
+Exec = /usr/bin/rm -f -- /boot/vmlinuz-linux-cachyos /boot/initramfs-linux-cachyos.img /boot/initramfs-linux-cachyos-fallback.img

@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = linux-macpro61
+
+[Action]
+Description = Preserving the current Mac Pro 6,1 kernel for rollback...
+When = PreTransaction
+Exec = /usr/lib/macpro61-support/macpro61-bootctl preserve-rollback
+AbortOnFail

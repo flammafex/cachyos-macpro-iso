@@ -41,10 +41,7 @@ There's no entry for `vmlinuz-linux-macpro61`. Since `profiledef.sh` uses `bootm
 ### Bug 3: Initramfs references without initramfs generation
 **Severity: 🟡 MEDIUM**
 
-The kernel is built with everything built-in (=y), and the PKGBUILD comment says "No initramfs needed." However:
-- The ESP sync hook copies `initramfs-linux-macpro61.img` to `/boot/efi/`
-- The GRUB and Syslinux configs reference `initramfs-linux-macpro61.img`
-- The `linux-macpro61.install` script tries to copy this file
+The kernel is built with everything built-in (=y), and the PKGBUILD comment says "No initramfs needed." The installed system now mounts its FAT ESP directly at `/boot`; no `/boot` → `/boot/efi` copy hook is shipped.
 
 If no initramfs is generated, these paths will be broken.
 
@@ -112,7 +109,7 @@ This requires a multi-layered approach:
    - Remove `linux-cachyos` and `linux-cachyos-lts` (wrong kernels)
    - Copy the kernel package from the ISO's cache to the installed system
    - Generate initramfs and boot entries
-   - Set up macfanctld, no-reboot alias, ESP sync hook
+   - Set up macfanctld, no-reboot alias, and the direct `/boot` ESP layout
    - Configure sysctl, modprobe.d, and applesmc
 
 2. **Calamares module override**:
@@ -146,7 +143,7 @@ cachyos-macpro-iso/
 │   │   │   │   └── applesmc.conf          ← NEW: load applesmc at boot
 │   │   │   ├── pacman.d/
 │   │   │   │   └── hooks/
-│   │   │   │       └── 99-esp-kernel-sync.hook  ← UPDATED: handle no-initramfs
+│   │   │   │       └── (no `/boot` → `/boot/efi` copy hook)
 │   │   │   ├── ssh/
 │   │   │   │   └── sshd_config.d/
 │   │   │   │       └── 10-archiso.conf    ← UPDATED: key-only after install
@@ -185,7 +182,7 @@ cachyos-macpro-iso/
 - [ ] `reboot` command warns and powers off instead
 - [ ] Calamares installer runs
 - [ ] Installed system boots with `linux-macpro61` kernel
-- [ ] Installed system has `macfanctld`, no-reboot alias, ESP sync hook
+- [ ] Installed system has `macfanctld`, no-reboot alias, and `/boot` mounted as the ESP
 - [ ] `pacman -Syu` can update `linux-macpro61` from [macpro] repo
 - [ ] Cold boot (poweroff + power on) restores GPU properly
 - [ ] Warm reboot produces warning and poweroff instead

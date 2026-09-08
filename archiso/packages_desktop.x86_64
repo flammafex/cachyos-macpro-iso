@@ -55,7 +55,6 @@ gcc
 gpart
 gparted
 gptfdisk
-grub
 haveged
 hwdetect
 hwinfo
@@ -81,7 +80,6 @@ libfido2
 libusb-compat
 libwnck3
 linux-atm
-linux-cachyos-lts
 # linux-cachyos-lts-zfs (removed for Mac Pro)
 # linux-cachyos-lts-nvidia-open (removed for Mac Pro)
 linux-macpro61
@@ -91,6 +89,7 @@ linux-macpro61-headers
 linux-firmware
 linux-firmware-marvell
 macfanctld
+macpro61-support
 lsb-release
 lsof
 lsscsi
@@ -169,7 +168,6 @@ spectacle
 spice-vdagent
 squashfs-tools
 sudo
-syslinux
 systemd-resolvconf
 tcpdump
 testdisk

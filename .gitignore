@@ -9,6 +9,8 @@ build/
 *.crt
 *.key
 *.pem
+__pycache__/
+*.py[cod]
 user-data
 meta-data
 *.qcow2
@@ -27,6 +29,15 @@ out/
 local-repo/*.pkg.tar.zst
 local-repo/*.db*
 local-repo/*.files*
+local-repo/macpro.manifest
+packages/*/pkg/
+packages/*/src/
+packages/*/*.pkg.tar.*
 *.iso
 *.sha1
 *.sha256
+.slim/deepwork/
+
+# BEGIN oh-my-opencode-slim clonedeps
+.slim/clonedeps/repos/
+# END oh-my-opencode-slim clonedeps

@@ -1,0 +1,4 @@
+type: job
+name: macpro-layout-check
+interface: python
+script: main.py

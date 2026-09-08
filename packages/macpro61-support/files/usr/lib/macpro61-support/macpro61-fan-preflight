@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ ! -d /sys/module/applesmc ]]; then
+    printf '%s\n' 'macpro61-fan-preflight: applesmc is not loaded' >&2
+    exit 1
+fi
+
+hwmon=''
+for candidate in /sys/class/hwmon/hwmon*/device/name; do
+    [[ -r $candidate ]] || continue
+    [[ $(<"$candidate") == applesmc ]] || continue
+    [[ -z $hwmon ]] || {
+        printf '%s\n' 'macpro61-fan-preflight: multiple applesmc hwmon devices found' >&2
+        exit 1
+    }
+    hwmon=$(realpath -- "${candidate%/name}")
+done
+
+if [[ -z $hwmon ]]; then
+    printf '%s\n' 'macpro61-fan-preflight: no applesmc hwmon device found' >&2
+    exit 1
+fi
+
+for control in temp1_input fan1_min fan1_manual; do
+    if [[ $control == temp1_input ]]; then
+        [[ -f $hwmon/$control && -r $hwmon/$control ]] || {
+            printf 'macpro61-fan-preflight: %s is not readable\n' "$hwmon/$control" >&2
+            exit 1
+        }
+    else
+        [[ -f $hwmon/$control && -w $hwmon/$control ]] || {
+            printf 'macpro61-fan-preflight: %s is not writable\n' "$hwmon/$control" >&2
+            exit 1
+        }
+    fi
+done
+
+if [[ -e $hwmon/fan2_min ]]; then
+    for control in fan2_min fan2_manual; do
+        [[ -f $hwmon/$control && -w $hwmon/$control ]] || {
+            printf 'macpro61-fan-preflight: %s is not writable\n' "$hwmon/$control" >&2
+            exit 1
+        }
+    done
+fi
+
+exit 0

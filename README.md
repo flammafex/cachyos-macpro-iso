@@ -1,23 +1,6 @@
 # CachyOS Mac Pro 6,1 ISO — eonicman Fork
 
-A fixed and maintained fork of [wolffcatskyy/cachyos-macpro-iso](https://github.com/wolffcatskyy/cachyos-macpro-iso) (archived March 2026).
-
-Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** — the "trash can" Mac — with full hardware support, GPU firmware, fan control, and macOS Tahoe KVM.
-
-## Why This Fork
-
-The original project was archived with 6 critical bugs that made the ISO unbootable after installation. The kernel config is excellent; the ISO packaging and installer integration were broken. This fork fixes all 6 bugs:
-
-| Bug | Severity | Fix |
-|-----|----------|-----|
-| Empty `local-repo/` — kernel never enters ISO | 🔴 Critical | Build scripts + repo setup automation |
-| EFI boot entries missing custom kernel | 🟡 Medium | Added `03-archiso-linux-macpro61.conf` + fallback |
-| Initramfs references without initramfs | 🟡 Medium | Added mkinitcpio config + minimal initramfs |
-| No `macfanctld` / no applesmc in fallback | 🔴 Critical | Added `macfanctld` + `applesmc` module-load + fan service |
-| SSH not enabled / UFW blocks port 22 | 🟡 Medium | Enabled `sshd` + UFW SSH rule |
-| **Calamares pacstrap installs wrong kernel** | 🔴 Critical | Post-install chroot script swaps kernels, configures boot |
-
-See [FIXES.md](FIXES.md) for detailed analysis.
+Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** — the infamous "Trash Can" Mac — with full hardware support, GPU firmware, fan control, and macOS Tahoe KVM.
 
 ## What You Get
 
@@ -112,13 +95,11 @@ sudo pacman-key --lsign-key 882DCFE48E2051D48E2562ABF3B607488DB35A47
 ./scripts/build-iso.sh -v
 ```
 
-## macOS Tahoe KVM
+## macOS Monterey KVM
 
-The kernel has KVM built-in. See [docs/kvm-macos.md](../linux-mac/docs/kvm-macos.md) for running macOS Tahoe in a VM with ~2-5% CPU overhead.
+The kernel has KVM built-in. See [docs/monterey-kvm.md](docs/monterey-kvm.md) for running macOS Monterey in a VM with ~2-5% CPU overhead.
 
-**Current state:** Phase 1 (software-rendered QXL display) — usable for CLI and light desktop work. Phase 3 (GPU passthrough via PVG) is on the roadmap in `linux-mac/docs/pvg-linux.md`.
-
-**Experimental Monterey KVM:** See [docs/monterey-kvm.md](docs/monterey-kvm.md) for the locally validated baseline and the unvalidated graphics plan.
+**Current state:** Software-rendered QXL display — usable for CLI and light desktop work. GPU passthrough via PVG is on the roadmap in `linux-mac/docs/pvg-linux.md`.
 
 ## Hardware Support
 

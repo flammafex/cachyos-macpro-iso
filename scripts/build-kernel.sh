@@ -4,7 +4,7 @@
 # Prerequisites:
 #   - Arch Linux or CachyOS build environment
 #   - Dependencies declared by the authoritative PKGBUILD
-#   - linux-mac checkout at LINUX_MAC_DIR (default: ../linux-mac-new)
+#   - linux-mac checkout at LINUX_MAC_DIR (default: ../linux-mac)
 #
 # Build order after this script:
 #   ./scripts/build-macfanctld.sh
@@ -13,7 +13,7 @@
 #   ./scripts/build-iso.sh
 #
 # Usage:
-#   ./scripts/build-kernel.sh [/path/to/linux-mac-new]
+#   ./scripts/build-kernel.sh [/path/to/linux-mac]
 #
 # Output:
 #   Exactly one kernel package and matching headers package are staged in
@@ -23,12 +23,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-LINUX_MAC_DIR="${1:-$PROJECT_DIR/../linux-mac-new}"
+LINUX_MAC_DIR="${1:-$PROJECT_DIR/../linux-mac}"
 LOCAL_REPO="$PROJECT_DIR/local-repo"
 PACKAGING_DIR="$LINUX_MAC_DIR/packaging/arch"
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
-    printf 'Usage: %s [/path/to/linux-mac-new]\n' "${BASH_SOURCE[0]}"
+    printf 'Usage: %s [/path/to/linux-mac]\n' "${BASH_SOURCE[0]}"
     exit 0
 fi
 if (( $# > 1 )); then

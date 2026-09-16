@@ -2,9 +2,9 @@
 # build-macfanctld.sh — Build and stage the authoritative macfanctld package
 #
 # Usage:
-#   MACFANCTLD_SOURCE_DIR=/path/to/macfanctld-new ./scripts/build-macfanctld.sh
+#   MACFANCTLD_SOURCE_DIR=/path/to/macfanctld ./scripts/build-macfanctld.sh
 #
-# MACFANCTLD_SOURCE_DIR defaults to ../macfanctld-new relative to this project.
+# MACFANCTLD_SOURCE_DIR defaults to ../macfanctld relative to this project.
 # Run scripts/build-support.sh next, then scripts/setup-local-repo.sh and
 # scripts/build-iso.sh.
 # The source PKGBUILD is copied to an isolated temporary build directory, so
@@ -16,11 +16,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-SOURCE_DIR="${MACFANCTLD_SOURCE_DIR:-$PROJECT_DIR/../macfanctld-new}"
+SOURCE_DIR="${MACFANCTLD_SOURCE_DIR:-$PROJECT_DIR/../macfanctld}"
 LOCAL_REPO="$PROJECT_DIR/local-repo"
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
-    printf 'Usage: MACFANCTLD_SOURCE_DIR=/path/to/macfanctld-new %s\n' "${BASH_SOURCE[0]}"
+    printf 'Usage: MACFANCTLD_SOURCE_DIR=/path/to/macfanctld %s\n' "${BASH_SOURCE[0]}"
     exit 0
 fi
 if (( $# != 0 )); then

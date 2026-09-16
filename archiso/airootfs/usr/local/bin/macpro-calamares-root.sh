@@ -91,6 +91,16 @@ for config in "${module_configs[@]}"; do
     [[ -f "$config" && ! -L "$config" ]] || fail "Calamares module config is missing: $config"
 done
 
+# Python job module implementation. Calamares loads job modules from its
+# module search path (/usr/lib/calamares/modules), never from /etc — check
+# here so a misplaced module fails with a clear error instead of the
+# loader's "not found in module search paths" dialog.
+for module_file in \
+    /usr/lib/calamares/modules/macpro-layout-check/module.desc \
+    /usr/lib/calamares/modules/macpro-layout-check/main.py; do
+    [[ -f "$module_file" && ! -L "$module_file" ]] || fail "Calamares python module file is missing: $module_file"
+done
+
 SETTINGS_TMP=$(mktemp /etc/calamares/.settings.conf.XXXXXX)
 cp -- "$SETTINGS_SOURCE" "$SETTINGS_TMP"
 

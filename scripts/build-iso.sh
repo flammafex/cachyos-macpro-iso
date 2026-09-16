@@ -3,7 +3,7 @@
 #
 # Prerequisites:
 #   - Arch Linux or CachyOS build environment
-#   - Kernel, macfanctld, and macpro61-support packages built
+#   - Kernel, macfanctld, macpro61-support, and cachyos-calamares-next packages built
 #   - local-repo/ set up with ./scripts/setup-local-repo.sh
 #   - archiso, mkinitcpio-archiso, squashfs-tools, grub installed
 #
@@ -70,8 +70,8 @@ package_files=(
 )
 shopt -u nullglob
 
-if (( ${#package_files[@]} != 4 )); then
-    echo "ERROR: Expected exactly four package artifacts in local-repo/; found ${#package_files[@]}." >&2
+if (( ${#package_files[@]} != 5 )); then
+    echo "ERROR: Expected exactly five package artifacts in local-repo/; found ${#package_files[@]}." >&2
     printf '  %s\n' "${package_files[@]:-none}" >&2
     exit 1
 fi
@@ -104,10 +104,12 @@ kernel_package=""
 headers_package=""
 macfan_package=""
 support_package=""
+calamares_package=""
 kernel_version=""
 headers_version=""
 macfan_version=""
 support_version=""
+calamares_version=""
 for artifact in "${package_files[@]}"; do
     read_package_metadata "$artifact"
     artifact_name=${artifact##*/}
@@ -143,6 +145,11 @@ for artifact in "${package_files[@]}"; do
             support_package="$artifact"
             support_version="$PACKAGE_VERSION"
             ;;
+        cachyos-calamares-next)
+            [[ -z $calamares_package ]] || { echo "ERROR: Duplicate cachyos-calamares-next package." >&2; exit 1; }
+            calamares_package="$artifact"
+            calamares_version="$PACKAGE_VERSION"
+            ;;
         *)
             echo "ERROR: Unexpected package name $PACKAGE_NAME in $artifact." >&2
             exit 1
@@ -150,8 +157,8 @@ for artifact in "${package_files[@]}"; do
     esac
 done
 
-if [[ -z $kernel_package || -z $headers_package || -z $macfan_package || -z $support_package ]]; then
-    echo "ERROR: Package set must contain linux-macpro61, matching headers, macfanctld, and macpro61-support." >&2
+if [[ -z $kernel_package || -z $headers_package || -z $macfan_package || -z $support_package || -z $calamares_package ]]; then
+    echo "ERROR: Package set must contain linux-macpro61, matching headers, macfanctld, macpro61-support, and cachyos-calamares-next." >&2
     exit 1
 fi
 if [[ $kernel_version != "$headers_version" ]]; then
@@ -166,6 +173,7 @@ manifest_files=(
     "${headers_package##*/}"
     "${macfan_package##*/}"
     "${support_package##*/}"
+    "${calamares_package##*/}"
 )
 MANIFEST_TMP=$(mktemp)
 (
@@ -177,7 +185,7 @@ if ! (cd "$LOCAL_REPO" && sha256sum -c -- "$MANIFEST" >/dev/null); then
     exit 1
 fi
 if ! cmp -s "$MANIFEST_TMP" "$MANIFEST"; then
-    echo "ERROR: Local repo manifest does not cover the validated package quartet and DB." >&2
+    echo "ERROR: Local repo manifest does not cover the validated package quintet and DB." >&2
     exit 1
 fi
 
@@ -187,6 +195,7 @@ echo "  Headers: ${headers_package##*/}"
 echo "  Fan daemon: ${macfan_package##*/}"
 echo "  Fan daemon version: $macfan_version"
 echo "  Support: ${support_package##*/} (version $support_version)"
+echo "  Calamares: ${calamares_package##*/} (version $calamares_version)"
 
 echo "=== Building CachyOS Mac Pro 6,1 ISO ==="
 echo "Local repo: $LOCAL_REPO"

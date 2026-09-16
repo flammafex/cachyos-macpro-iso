@@ -1,10 +1,11 @@
 #!/bin/bash
 # setup-local-repo.sh — Create the macpro pacman repo from local package files
 #
-# Run this after building all four authoritative local packages:
+# Run this after building all five authoritative local packages:
 #   ./scripts/build-kernel.sh
 #   ./scripts/build-macfanctld.sh
 #   ./scripts/build-support.sh
+#   ./scripts/build-calamares.sh
 #   ./scripts/setup-local-repo.sh
 #
 # Package artifacts are .pkg.tar.zst on current Arch systems.  .pkg.tar.xz is
@@ -37,10 +38,10 @@ package_files=(
 )
 shopt -u nullglob
 
-if (( ${#package_files[@]} != 4 )); then
-    echo "ERROR: Expected exactly four package artifacts in $LOCAL_REPO/; found ${#package_files[@]}." >&2
+if (( ${#package_files[@]} != 5 )); then
+    echo "ERROR: Expected exactly five package artifacts in $LOCAL_REPO/; found ${#package_files[@]}." >&2
     printf '  %s\n' "${package_files[@]:-none}" >&2
-    echo "The repo must contain linux-macpro61, matching headers, macfanctld, and macpro61-support." >&2
+    echo "The repo must contain linux-macpro61, matching headers, macfanctld, macpro61-support, and cachyos-calamares-next." >&2
     exit 1
 fi
 
@@ -72,10 +73,12 @@ kernel_package=""
 headers_package=""
 macfan_package=""
 support_package=""
+calamares_package=""
 kernel_version=""
 headers_version=""
 macfan_version=""
 support_version=""
+calamares_version=""
 for artifact in "${package_files[@]}"; do
     read_package_metadata "$artifact"
     artifact_name=${artifact##*/}
@@ -111,6 +114,11 @@ for artifact in "${package_files[@]}"; do
             support_package="$artifact"
             support_version="$PACKAGE_VERSION"
             ;;
+        cachyos-calamares-next)
+            [[ -z $calamares_package ]] || { echo "ERROR: Duplicate cachyos-calamares-next package." >&2; exit 1; }
+            calamares_package="$artifact"
+            calamares_version="$PACKAGE_VERSION"
+            ;;
         *)
             echo "ERROR: Unexpected package name $PACKAGE_NAME in $artifact." >&2
             exit 1
@@ -118,8 +126,8 @@ for artifact in "${package_files[@]}"; do
     esac
 done
 
-if [[ -z $kernel_package || -z $headers_package || -z $macfan_package || -z $support_package ]]; then
-    echo "ERROR: Package set must contain linux-macpro61, matching headers, macfanctld, and macpro61-support." >&2
+if [[ -z $kernel_package || -z $headers_package || -z $macfan_package || -z $support_package || -z $calamares_package ]]; then
+    echo "ERROR: Package set must contain linux-macpro61, matching headers, macfanctld, macpro61-support, and cachyos-calamares-next." >&2
     exit 1
 fi
 if [[ $kernel_version != "$headers_version" ]]; then
@@ -132,11 +140,11 @@ echo "Package artifacts: ${#package_files[@]}"
 printf '  %s\n' "${package_files[@]}"
 
 # Remove every old database sidecar before rebuilding it from the validated
-# quartet.  repo-add creates macpro.db as a compatibility symlink.
+# quintet.  repo-add creates macpro.db as a compatibility symlink.
 rm -f "$LOCAL_REPO"/macpro.db* "$MANIFEST"
 
 echo ">>> Creating repo database..."
-repo-add "$LOCAL_REPO/macpro.db.tar.gz" "$kernel_package" "$headers_package" "$macfan_package" "$support_package"
+repo-add "$LOCAL_REPO/macpro.db.tar.gz" "$kernel_package" "$headers_package" "$macfan_package" "$support_package" "$calamares_package"
 
 if [[ ! -f "$LOCAL_REPO/macpro.db" || ! -f "$LOCAL_REPO/macpro.db.tar.gz" ]]; then
     echo "ERROR: Failed to create $LOCAL_REPO/macpro.db" >&2
@@ -152,6 +160,7 @@ manifest_files=(
     "${headers_package##*/}"
     "${macfan_package##*/}"
     "${support_package##*/}"
+    "${calamares_package##*/}"
 )
 (
     cd "$LOCAL_REPO"
@@ -169,5 +178,6 @@ echo "Headers: ${headers_package##*/}"
 echo "Fan daemon: ${macfan_package##*/}"
 echo "Fan daemon version: $macfan_version"
 echo "Support: ${support_package##*/} (version $support_version)"
+echo "Calamares: ${calamares_package##*/} (version $calamares_version)"
 echo ""
 echo "Next step: Run scripts/build-iso.sh to build the ISO"

@@ -207,7 +207,7 @@ stage_calamares_bundle() (
     local _kernel_package='' _headers_package='' _macfan_package='' _support_package=''
     local _kernel_version='' _headers_version='' _macfan_version='' _support_version=''
     local _package_arch=''
-    local -a _package_files=() _staged_packages=() _staged_package_paths=() _module_files=() _netinstall_files=()
+    local -a _package_files=() _bundle_candidates=() _calamares_override=() _staged_packages=() _staged_package_paths=() _module_files=() _netinstall_files=()
 
     command -v pacman >/dev/null 2>&1 || die 'pacman is required for local package metadata validation'
     command -v sha256sum >/dev/null 2>&1 || die 'sha256sum is required for package manifest validation'
@@ -217,7 +217,16 @@ stage_calamares_bundle() (
 
     shopt -s nullglob
     _package_files=("$_repo_dir"/*.pkg.tar.zst "$_repo_dir"/*.pkg.tar.xz)
+    _calamares_override=("$_repo_dir"/cachyos-calamares-next-*.pkg.tar.zst "$_repo_dir"/cachyos-calamares-next-*.pkg.tar.xz)
     shopt -u nullglob
+    (( ${#_calamares_override[@]} == 1 )) || die 'Expected exactly one calamares installer override archive, found [%s]' "${#_calamares_override[@]}"
+    # The live-only Calamares override rides the pacman server but must never
+    # enter the target offline bundle: cull it before the quartet check.
+    _bundle_candidates=()
+    for _artifact in "${_package_files[@]}"; do
+        [[ ${_artifact##*/} == cachyos-calamares-next-*.pkg.tar.* ]] || _bundle_candidates+=("$_artifact")
+    done
+    _package_files=("${_bundle_candidates[@]}")
     (( ${#_package_files[@]} == 4 )) || die 'Expected exactly four local package archives, found [%s]' "${#_package_files[@]}"
 
     read_package_metadata() {

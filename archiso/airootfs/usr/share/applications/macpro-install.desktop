@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install CachyOS Mac Pro
+Comment=Install CachyOS Mac Pro 6,1 via Calamares (bypasses the CachyOS Hello testing-ISO gate)
+Exec=/usr/local/bin/calamares-online.sh
+Icon=calamares
+Terminal=false
+Categories=System;

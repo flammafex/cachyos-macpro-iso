@@ -1,6 +1,6 @@
-# CachyOS Mac Pro 6,1 ISO — eonicman Fork
+# CachyOS Mac Pro 6,1 ISO
 
-Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** — the infamous "Trash Can" Mac — with full hardware support, GPU firmware, fan control, and macOS Tahoe KVM.
+Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** — the infamous "Trash Can" Mac — with full hardware support, GPU firmware, fan control, and macOS Monterey KVM.
 
 ## What You Get
 
@@ -11,7 +11,7 @@ Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** �
   - BORE CPU scheduler + BBR3 congestion control
   - ACPI GPE16 storm fix (Thunderbolt log spam eliminated)
   - NVMe + TRIM support out of the box
-  - KVM built-in for macOS Tahoe virtualization
+  - KVM built-in for macOS Monterey virtualization
 - **Fan control** — `applesmc` + `macfanctld` for thermal management
 - **Cold boot protection** — `reboot` aliased to `poweroff`, `reboot.target` masked
 - **SSH enabled** in live environment for headless setup
@@ -116,7 +116,7 @@ The kernel has KVM built-in. See [docs/monterey-kvm.md](docs/monterey-kvm.md) fo
 | NVMe + TRIM | ✅ Working | Built-in; enable `fstrim.timer` |
 | Bluetooth | ✅ Working | Broadcom via btusb |
 | Fan Control | ✅ Working | applesmc + macfanctld |
-| KVM (macOS Tahoe) | ✅ Working | ~2-5% CPU overhead |
+| KVM (macOS Monterey) | ✅ Working | ~2-5% CPU overhead |
 | Sleep/Wake | ❌ Disabled | Unreliable on this hardware |
 
 ## Audio Fix (v2)

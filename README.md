@@ -168,6 +168,7 @@ The Mac Pro 6,1 uses a **Cirrus Logic CS4208** audio codec behind an Intel C600/
 ## Credits
 
 - **wolffcatskyy** — original kernel config, hardware audit, KVM docs, and ISO framework
+- **eonicman** - fixed critical issues with wolffcatskyy's repo
 - **CachyOS** — base ISO builder and optimized packages
 - **linux-mac** — custom kernel for Mac Pro 6,1
 

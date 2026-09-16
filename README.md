@@ -91,13 +91,19 @@ cd cachyos-macpro-iso
 ./scripts/build-support.sh
 ```
 
-### Step 4: Set up the local repo
+### Step 4: Build the Calamares installer package
+
+```bash
+./scripts/build-calamares.sh
+```
+
+### Step 5: Set up the local repo
 
 ```bash
 ./scripts/setup-local-repo.sh
 ```
 
-### Step 5: Build the ISO
+### Step 6: Build the ISO
 
 ```bash
 sudo pacman -S archiso mkinitcpio-archiso squashfs-tools grub --needed
@@ -159,7 +165,7 @@ The Mac Pro 6,1 uses a **Cirrus Logic CS4208** audio codec behind an Intel C600/
 | Installer wrapper | `macpro-installer-launch.sh` — runs Calamares then applies fixes |
 | Calamares storage/boot flow | Plain ext4 `/` plus FAT `/boot`; the package finalizer owns systemd-boot writes |
 | `profiledef.sh` | Added new scripts to file_permissions |
-| Build scripts | `scripts/build-kernel.sh`, `build-macfanctld.sh`, `build-support.sh`, `setup-local-repo.sh`, `build-iso.sh` |
+| Build scripts | `scripts/build-kernel.sh`, `build-macfanctld.sh`, `build-support.sh`, `build-calamares.sh`, `setup-local-repo.sh`, `build-iso.sh` |
 
 ## Testing Checklist
 

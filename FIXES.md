@@ -130,6 +130,36 @@ This requires a multi-layered approach:
 - Custom Calamares `contextualprocess` module config added
 - Kernel package cached in live environment for post-install
 
+Update (7.2.6 cycle): `calamares-online.sh` no longer pulls Calamares from online repos — the ISO ships a locally rebuilt `cachyos-calamares-next` (see Bug 7) plus a vetted module bundle, and the Hello testing-ISO gate is bypassed via a desktop launcher.
+
+---
+
+### Bug 7: Repo Calamares linked against stale boost (installer won't start)
+**Severity: 🟡 HIGH — installer dies in the loader on the live ISO**
+
+`cachyos-calamares-next 3.4.2-13` (built Aug 12) links `libboost_python314.so.1.91.0`, but the repos serve boost-libs 1.92 (soname `.1.92.0`) behind an unversioned dependency, so every fresh ISO — and every reinstall — ships a Calamares that fails with "cannot open shared object file". Upstream has not rebuilt in over a month.
+
+**Fix:**
+- Rebuilt `cachyos-calamares-next` locally against boost 1.92 (`../cachyos-calamares-next`, pkgrel `13 → 13.1`) via new `scripts/build-calamares.sh`; staged in `local-repo/`
+- Moved `[macpro]` first in `archiso/pacman.conf` — first-listed repos win same-name contests regardless of version, so the override is actually selected at ISO build time
+- `setup-local-repo.sh` / `build-iso.sh` extended from exact-4 quartet to quintet; `util-iso.sh` bundle staging explicitly excludes the live-only installer (target bundle stays 4)
+- Provenance recorded in `scripts/build-calamares.sh`; retire the override once upstream links current boost
+
+**Status:** ✅ Fixed — `cachyos-calamares-next-3.4.2-13.1` staged (readelf: 1.92.0, zero 1.91 refs); installer UI launches on live hardware
+
+---
+
+### Bug 8: Calamares can't find the macpro-layout-check module
+**Severity: 🟡 HIGH — installer aborts at startup**
+
+The overlaid `settings.conf` references instance `macpro-layout-check@macpro-layout-check`, but the Python job module (`module.desc` + `main.py`) was staged under `archiso/airootfs/etc/calamares/`, which is not in Calamares' module search path (`/usr/lib/calamares/modules`). Result: "unable to load all of the configured modules" dialog.
+
+**Fix:**
+- Moved the module to `archiso/airootfs/usr/lib/calamares/modules/macpro-layout-check/` (kept `main.py` + `module.desc`, dropped stale `__pycache__`)
+- Added a fail-fast existence check for both files to `macpro-calamares-root.sh` alongside its other validations
+
+**Status:** ✅ Fixed — installer proceeds past module loading on live hardware (verified up to the partitioning step)
+
 ---
 
 ## Fix Architecture
@@ -167,10 +197,12 @@ cachyos-macpro-iso/
 ## Build Order
 
 1. Build the kernel: `scripts/build-kernel.sh`
-2. Set up the local repo: `scripts/setup-local-repo.sh`
-3. Build the ISO: `sudo ./buildiso.sh -p desktop -v -w`
-4. Test in QEMU or on real Mac Pro 6,1 hardware
-5. Flash to USB and test cold boot
+2. Build the support packages: `scripts/build-macfanctld.sh`, `scripts/build-support.sh`
+3. Build the installer: `scripts/build-calamares.sh`
+4. Set up the local repo: `scripts/setup-local-repo.sh`
+5. Build the ISO: `scripts/build-iso.sh` (needs sudo for mkarchiso)
+6. Test in QEMU or on real Mac Pro 6,1 hardware
+7. Flash to USB and test cold boot
 
 ## Testing Checklist
 
@@ -180,7 +212,7 @@ cachyos-macpro-iso/
 - [ ] GPU detected (`lspci | grep AMD`, `glxinfo | grep renderer`)
 - [ ] SSH accessible (`ssh root@macpro` from another machine)
 - [ ] `reboot` command warns and powers off instead
-- [ ] Calamares installer runs
+- [x] Calamares installer runs
 - [ ] Installed system boots with `linux-macpro61` kernel
 - [ ] Installed system has `macfanctld`, no-reboot alias, and `/boot` mounted as the ESP
 - [ ] `pacman -Syu` can update `linux-macpro61` from [macpro] repo

@@ -1,0 +1,13 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = linux-macpro61
+Target = mkinitcpio
+Target = mkinitcpio-busybox
+Target = mkinitcpio-archiso
+
+[Action]
+Description = Checking the Mac Pro 6,1 ESP before the transaction...
+When = PreTransaction
+Exec = /usr/lib/macpro61-support/macpro61-bootctl guard
+AbortOnFail

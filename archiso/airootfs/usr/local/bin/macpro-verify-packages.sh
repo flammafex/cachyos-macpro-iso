@@ -50,9 +50,71 @@ verify_package headers "${expected[headers_name]}" "${expected[headers_version]}
 verify_package macfanctld "${expected[macfanctld_name]}" "${expected[macfanctld_version]}"
 verify_package support "${expected[support_name]}" "${expected[support_version]}"
 
-installed_packages=$(pacman -Qq 2>/dev/null) || fail 'pacman could not enumerate installed packages'
+# The kernel package keeps its canonical image under /usr/lib/modules.
+# Calamares' later mkinitcpio job expects it in /boot already.
+mapfile -t kernel_images < <(
+    pacman -Qlq linux-macpro61 2>/dev/null |
+    grep -E '^/usr/lib/modules/[^/]+/vmlinuz$' || true
+)
+
+(( ${#kernel_images[@]} == 1 )) || \
+    fail "Expected exactly one linux-macpro61 kernel image; found ${#kernel_images[@]}"
+
+[[ -s "${kernel_images[0]}" ]] || \
+    fail "linux-macpro61 kernel image is missing or empty: ${kernel_images[0]}"
+
+install -Dm0644 \
+    "${kernel_images[0]}" \
+    /boot/vmlinuz-linux-macpro61
+
+cmp -s \
+    "${kernel_images[0]}" \
+    /boot/vmlinuz-linux-macpro61 || \
+    fail 'The /boot Mac Pro kernel does not match the installed package image.'
+
+# CachyOS pacstrap currently leaves its stock kernels installed before our
+# offline package stage. They must be gone before the global mkinitcpio job,
+# otherwise the small shared ESP fills with several kernel/initramfs sets.
+mapfile -t installed_packages < <(pacman -Qq 2>/dev/null) || \
+    fail 'pacman could not enumerate installed packages'
+
+stock_kernels=()
+for installed_package in "${installed_packages[@]}"; do
+    case "$installed_package" in
+        linux-cachyos*)
+            stock_kernels+=("$installed_package")
+            ;;
+    esac
+done
+
+if (( ${#stock_kernels[@]} )); then
+    printf 'Removing stock CachyOS kernel packages: %s\n' \
+        "${stock_kernels[*]}" >&2
+
+    pacman -R --noconfirm -- "${stock_kernels[@]}" || \
+        fail 'Could not remove stock CachyOS kernel packages.'
+fi
+
+# Remove any stale stock presets/files left by an interrupted prior attempt.
+rm -f -- \
+    /etc/mkinitcpio.d/linux-cachyos*.preset \
+    /boot/vmlinuz-linux-cachyos* \
+    /boot/initramfs-linux-cachyos*.img
+
+installed_packages=$(pacman -Qq 2>/dev/null) || \
+    fail 'pacman could not re-enumerate installed packages'
+
 while IFS= read -r installed_package; do
     case "$installed_package" in
-        linux-cachyos*) fail "Unexpected stock CachyOS kernel package installed: $installed_package" ;;
+        linux-cachyos*)
+            fail "Stock CachyOS kernel package survived cleanup: $installed_package"
+            ;;
     esac
 done <<< "$installed_packages"
+
+[[ -s /boot/vmlinuz-linux-macpro61 ]] || \
+    fail 'Mac Pro kernel was not seeded into /boot.'
+
+[[ -f /etc/mkinitcpio.d/linux-macpro61.preset ]] || \
+    fail 'linux-macpro61 mkinitcpio preset is missing.'
+

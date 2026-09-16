@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = linux-macpro61
+Target = mkinitcpio
+Target = mkinitcpio-busybox
+Target = mkinitcpio-archiso
+
+[Action]
+Description = Verifying the Mac Pro 6,1 boot files...
+When = PostTransaction
+Exec = /usr/lib/macpro61-support/macpro61-bootctl verify

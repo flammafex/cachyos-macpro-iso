@@ -5,6 +5,13 @@
 #   CALAMARES_SOURCE_DIR=/path/to/cachyos-calamares-next ./scripts/build-calamares.sh
 #
 # CALAMARES_SOURCE_DIR defaults to ../cachyos-calamares-next relative to this project.
+# Provenance: that checkout is upstream
+# https://github.com/CachyOS/CachyOS-PKGBUILDS (cachyos-calamares, 3.4.2-13)
+# with the single change pkgrel 13 -> 13.1 — a rebuild against boost 1.92,
+# since the repo build predates the 1.92 soname bump. The suffix beats the
+# repo build but yields to any future upstream rebuild, so retire this
+# override once upstream links current boost. The checkout is intentionally
+# local-only (not pushed); this note is its provenance record.
 # Run scripts/setup-local-repo.sh and scripts/build-iso.sh next.
 # The source PKGBUILD is copied to an isolated temporary build directory, so
 # stale package files in the source tree cannot be mistaken for build output.

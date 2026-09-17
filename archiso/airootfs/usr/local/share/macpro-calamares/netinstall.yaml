@@ -132,6 +132,7 @@
           - wireplumber
           - pipewire-alsa
           - realtime-privileges
+          - rtkit
       - name: "hardware"
         description: "Hardware support libs and firmware"
         selected: true

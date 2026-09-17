@@ -413,7 +413,6 @@ insert_macpro_sequence() {
                 print prefix "- shellprocess@stage-macpro"
                 print prefix "- packages@offline-macpro"
                 print prefix "- shellprocess@verify-macpro"
-                print prefix "- shellprocess@enable-macpro"
                 packages_inserted++
                 next
             }
@@ -424,9 +423,16 @@ insert_macpro_sequence() {
                 finalize_inserted++
                 next
             }
+            if (in_exec && indentation(line) > exec_indent && trimmed == "- services-systemd") {
+                prefix=substr(line, 1, length(line) - length(trimmed))
+                print line
+                print prefix "- shellprocess@enable-macpro"
+                enable_inserted++
+                next
+            }
             print line
         }
-        END { exit (layout_inserted == 1 && packages_inserted == 1 && finalize_inserted == 1 ? 0 : 1) }
+        END { exit (layout_inserted == 1 && packages_inserted == 1 && finalize_inserted == 1 && enable_inserted == 1 ? 0 : 1) }
     ' "$file" > "$output" || fail 'Expected exactly one nested exec insertion point for each Mac Pro job group'
     mv -- "$output" "$file"
 }
@@ -442,8 +448,18 @@ done
 [[ $(literal_token_count "${module_configs[4]}" '${ROOT}') == 0 ]] || fail 'The enable config contains a ROOT token.'
 [[ $(literal_token_count "${module_configs[5]}" '${ROOT}') == 0 ]] || fail 'The finalize config contains a ROOT token.'
 [[ $(exact_line_count "${module_configs[4]}" 'dontChroot: false') == 1 ]] || fail 'The enable config must use target chroot execution.'
-[[ $(exact_line_count "${module_configs[4]}" '- command: "/usr/bin/systemctl enable macfanctld.service"') == 1 ]] || \
-    fail 'The enable config must run the exact macfanctld service command.'
+for required_enable_command in \
+    '/usr/bin/pacman -Q plasma-desktop plasma-login-manager plasma-nm networkmanager' \
+    '/usr/bin/systemctl enable macfanctld.service' \
+    '/usr/bin/systemctl enable NetworkManager.service' \
+    '/usr/bin/systemctl enable plasmalogin.service' \
+    '/usr/bin/systemctl set-default graphical.target' \
+    '/usr/bin/systemctl is-enabled macfanctld.service' \
+    '/usr/bin/systemctl is-enabled NetworkManager.service' \
+    '/usr/bin/systemctl is-enabled plasmalogin.service'; do
+    [[ $(exact_line_count "${module_configs[4]}" "- command: \"$required_enable_command\"") == 1 ]] || \
+        fail "The enable config is missing required command: $required_enable_command"
+done
 [[ $(exact_line_count "${module_configs[5]}" 'dontChroot: false') == 1 ]] || fail 'The finalize config must use target chroot execution.'
 [[ $(grep -Ec '^[[:space:]]*- command: "/usr/lib/macpro61-support/macpro61-bootctl seed-rollback /var/cache/calamares/packages/[^"@[:space:]]+"$' "${module_configs[5]}") == 1 ]] || \
     fail 'The finalize config must seed rollback from the rendered kernel archive.'
@@ -457,7 +473,7 @@ sequence_section_line=$(exact_line_number "$SETTINGS_TMP" 'sequence:')
 (( instances_section_line < sequence_section_line )) || fail 'Calamares instances: must precede sequence:.'
 
 [[ $(exec_section_count "$SETTINGS_TMP") == 1 ]] || fail 'Calamares settings must contain exactly one nested exec: list.'
-for anchor in partition packages@online initcpiocfg initcpio; do
+for anchor in partition packages@online initcpiocfg initcpio services-systemd; do
     require_one_exec_anchor "$SETTINGS_TMP" "$anchor" "$(exec_sequence_count "$SETTINGS_TMP" "$anchor")"
 done
 require_one_exec_anchor "$SETTINGS_TMP" shellprocess "$(exec_sequence_count "$SETTINGS_TMP" shellprocess)"
@@ -467,7 +483,8 @@ partition_line=$(exec_sequence_line "$SETTINGS_TMP" partition)
 packages_line=$(exec_sequence_line "$SETTINGS_TMP" packages@online)
 initcpiocfg_line=$(exec_sequence_line "$SETTINGS_TMP" initcpiocfg)
 initcpio_line=$(exec_sequence_line "$SETTINGS_TMP" initcpio)
-(( partition_line < packages_line && packages_line < initcpiocfg_line && initcpiocfg_line < initcpio_line )) || \
+services_line=$(exec_sequence_line "$SETTINGS_TMP" services-systemd)
+(( partition_line < packages_line && packages_line < initcpiocfg_line && initcpiocfg_line < initcpio_line && initcpio_line < services_line )) || \
     fail 'Calamares exec anchors are out of order.'
 
 for id in macpro-layout-check stage-macpro offline-macpro verify-macpro enable-macpro finalize-macpro; do
@@ -494,6 +511,7 @@ OVERLAY_TMP=''
 [[ $(exec_sequence_count "$SETTINGS_TMP" packages@online) == 1 ]] || fail 'packages@online count changed during overlay.'
 [[ $(exec_sequence_count "$SETTINGS_TMP" initcpiocfg) == 1 ]] || fail 'initcpiocfg count changed during overlay.'
 [[ $(exec_sequence_count "$SETTINGS_TMP" initcpio) == 1 ]] || fail 'initcpio count changed during overlay.'
+[[ $(exec_sequence_count "$SETTINGS_TMP" services-systemd) == 1 ]] || fail 'services-systemd count changed during overlay.'
 [[ $(exec_sequence_count "$SETTINGS_TMP" shellprocess@stage-macpro) == 1 ]] || fail 'Stage job count is not exactly one.'
 [[ $(exec_sequence_count "$SETTINGS_TMP" packages@offline-macpro) == 1 ]] || fail 'Offline package job count is not exactly one.'
 [[ $(exec_sequence_count "$SETTINGS_TMP" shellprocess@verify-macpro) == 1 ]] || fail 'Verify job count is not exactly one.'
@@ -533,12 +551,14 @@ enable_line=$(exec_sequence_line "$SETTINGS_TMP" shellprocess@enable-macpro)
 initcpiocfg_line=$(exec_sequence_line "$SETTINGS_TMP" initcpiocfg)
 initcpio_line=$(exec_sequence_line "$SETTINGS_TMP" initcpio)
 finalize_line=$(exec_sequence_line "$SETTINGS_TMP" shellprocess@finalize-macpro)
+services_line=$(exec_sequence_line "$SETTINGS_TMP" services-systemd)
 (( layout_line == partition_line + 1 )) || fail 'Layout-check job is not immediately after partition selection.'
 (( layout_line < packages_line )) || fail 'Layout-check job is not before package installation.'
-(( stage_line == packages_line + 1 && offline_line == packages_line + 2 && verify_line == packages_line + 3 && enable_line == packages_line + 4 )) || \
-    fail 'Mac Pro jobs are not immediately after packages@online.'
+(( stage_line == packages_line + 1 && offline_line == packages_line + 2 && verify_line == packages_line + 3 )) || \
+    fail 'Mac Pro package jobs are not immediately after packages@online.'
 (( finalize_line == initcpio_line + 1 )) || fail 'Finalize job is not immediately after initcpio.'
-(( packages_line < stage_line && stage_line < offline_line && offline_line < verify_line && verify_line < enable_line && enable_line < initcpiocfg_line && initcpiocfg_line < initcpio_line && initcpio_line < finalize_line )) || \
+(( enable_line == services_line + 1 )) || fail 'Enable job is not immediately after services-systemd.'
+(( packages_line < stage_line && stage_line < offline_line && offline_line < verify_line && verify_line < initcpiocfg_line && initcpiocfg_line < initcpio_line && initcpio_line < finalize_line && finalize_line < services_line && services_line < enable_line )) || \
     fail 'Final Calamares exec ordering is invalid.'
 
 mv -- "$SETTINGS_TMP" "$SETTINGS_TARGET"

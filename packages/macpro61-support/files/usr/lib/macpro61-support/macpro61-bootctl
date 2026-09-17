@@ -6,6 +6,7 @@ readonly KERNEL=/boot/vmlinuz-linux-macpro61
 readonly INITRAMFS=/boot/initramfs-linux-macpro61.img
 readonly LOADER_CONF=/boot/loader/loader.conf
 readonly LOADER_ENTRY=/boot/loader/entries/macpro61.conf
+readonly OBSOLETE_SYSTEMD_BOOT=/boot/EFI/systemd/systemd-bootx64.efi
 readonly ROLLBACK_DIR=/var/lib/macpro61-support/rollback
 readonly KERNEL_ENTRY=/vmlinuz-linux-macpro61
 readonly INITRAMFS_ENTRY=/initramfs-linux-macpro61.img
@@ -95,6 +96,22 @@ cleanup_loader_entries() {
         /boot/loader/entries/linux-cachyos-lts.conf
 }
 
+cleanup_obsolete_systemd_boot() {
+    # Older installer revisions placed systemd-boot here. OpenLinuxBoot now
+    # consumes macpro61.conf directly, so retaining this binary creates a
+    # redundant generic "EFI" entry in the OpenCore picker.
+    if [[ -e $OBSOLETE_SYSTEMD_BOOT || -L $OBSOLETE_SYSTEMD_BOOT ]]; then
+        [[ -f $OBSOLETE_SYSTEMD_BOOT && ! -L $OBSOLETE_SYSTEMD_BOOT ]] ||
+            die "refusing to remove unexpected object at $OBSOLETE_SYSTEMD_BOOT"
+
+        rm -f -- "$OBSOLETE_SYSTEMD_BOOT" ||
+            die "cannot remove obsolete $OBSOLETE_SYSTEMD_BOOT"
+    fi
+
+    # Remove the directory only if it is now empty.
+    rmdir -- "${OBSOLETE_SYSTEMD_BOOT%/*}" 2>/dev/null || true
+}
+
 finalize() {
     require_esp
     [[ -s $KERNEL ]] || die "missing $KERNEL"
@@ -107,6 +124,7 @@ finalize() {
         die 'cannot create loader directories'
 
     cleanup_loader_entries
+    cleanup_obsolete_systemd_boot
 
     # Do NOT run `bootctl install` here. The ESP is shared with OpenCore,
     # and OpenLinuxBoot can boot the BLS entry directly.
@@ -360,6 +378,9 @@ require_rollback() {
 verify() {
     require_esp
     cleanup_loader_entries
+
+    [[ ! -e $OBSOLETE_SYSTEMD_BOOT && ! -L $OBSOLETE_SYSTEMD_BOOT ]] ||
+        die "obsolete standalone systemd-boot remains at $OBSOLETE_SYSTEMD_BOOT"
     [[ -s $KERNEL ]] || die "missing or empty $KERNEL"
     [[ -s $INITRAMFS ]] || die "missing or empty $INITRAMFS"
     require_rollback

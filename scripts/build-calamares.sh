@@ -44,6 +44,7 @@ if ! command -v makepkg >/dev/null 2>&1; then
 fi
 if [[ ! -d "$SOURCE_DIR" ]]; then
     echo "ERROR: cachyos-calamares-next source directory not found: $SOURCE_DIR" >&2
+    echo "Reconstruct it with: $PROJECT_DIR/scripts/reconstruct-calamares-source.sh" >&2
     exit 1
 fi
 if [[ ! -f "$SOURCE_DIR/PKGBUILD" ]]; then

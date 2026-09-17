@@ -1,6 +1,6 @@
 pkgname=macpro61-support
 pkgver=1
-pkgrel=6
+pkgrel=8
 pkgdesc='Durable Mac Pro 6,1 boot, fan, and hardware policy'
 arch=('x86_64')
 license=('GPL')
@@ -19,9 +19,7 @@ package() {
         macpro-gpu.conf; do
         install -Dm644 "$files/etc/modprobe.d/$file" "$pkgdir/etc/modprobe.d/$file"
     done
-    for file in applesmc.conf macpro-sound.conf; do
-        install -Dm644 "$files/etc/modules-load.d/$file" "$pkgdir/etc/modules-load.d/$file"
-    done
+    install -Dm644         "$files/etc/modules-load.d/applesmc.conf"         "$pkgdir/etc/modules-load.d/applesmc.conf"
 
     for hook in "$files"/etc/pacman.d/hooks/*.hook; do
         install -Dm644 "$hook" "$pkgdir/etc/pacman.d/hooks/${hook##*/}"

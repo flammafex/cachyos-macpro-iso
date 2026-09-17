@@ -21,13 +21,22 @@ Custom [CachyOS](https://cachyos.org) ISO for the **Mac Pro 6,1 (Late 2013)** â€
 
 ### Download the ISO
 
-Download the latest release from [GitHub Releases](https://github.com/eonicman/cachyos-macpro-iso/releases).
+Download the latest release from [GitHub Releases](https://github.com/flammafex/cachyos-macpro-iso/releases).
 
 ### Flash to USB
 
 ```bash
+**Reassemble**
+`cat cachyos-macpro-2026.09.16-x86_64.iso.part* > cachyos-macpro-2026.09.16-x86_64.iso
+`
+**sha256 of reassembled iso**
+`0695e9ce9781e51136e964e755af4f20fa6dbdcd16be5af8a009cb69a910422a `
+
+**Run to verify**
+`sha256sum cachyos-macpro-2026.09.16-x86_64.iso`
+
 # Linux/macOS
-sudo dd if=cachyos-macpro-*.iso of=/dev/sdX bs=4M status=progress && sync
+sudo dd if=cachyos-macpro-2026.09.16-x86_64.iso` of=/dev/sdX bs=4M status=progress && sync
 
 # Or use balenaEtcher / Rufus (Windows)
 ```

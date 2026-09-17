@@ -30,7 +30,7 @@ Download the latest release from [GitHub Releases](https://github.com/flammafex/
 `cat cachyos-macpro-2026.09.16-x86_64.iso.part* > cachyos-macpro-2026.09.16-x86_64.iso
 `
 # sha256 of reassembled iso
-#0695e9ce9781e51136e964e755af4f20fa6dbdcd16be5af8a009cb69a910422a `
+# 0695e9ce9781e51136e964e755af4f20fa6dbdcd16be5af8a009cb69a910422a `
 
 # Run to verify
 `sha256sum cachyos-macpro-2026.09.16-x86_64.iso`
@@ -61,11 +61,12 @@ sudo poweroff    # NOT reboot!
 
 You need an Arch Linux or CachyOS machine (can be the Mac Pro itself).
 
-### Step 1: Clone both repos
+### Step 1: Clone the repos
 
 ```bash
-git clone https://github.com/eonicman/linux-mac.git
-git clone https://github.com/eonicman/cachyos-macpro-iso.git
+git clone https://github.com/flammafex/macfanctld.git
+git clone https://github.com/flammafex/linux-mac.git
+git clone https://github.com/flammafex/cachyos-macpro-iso.git
 cd cachyos-macpro-iso
 ```
 

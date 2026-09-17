@@ -26,16 +26,16 @@ Download the latest release from [GitHub Releases](https://github.com/flammafex/
 ### Flash to USB
 
 ```bash
-**Reassemble**
+# Reassemble the split files
 `cat cachyos-macpro-2026.09.16-x86_64.iso.part* > cachyos-macpro-2026.09.16-x86_64.iso
 `
-**sha256 of reassembled iso**
-`0695e9ce9781e51136e964e755af4f20fa6dbdcd16be5af8a009cb69a910422a `
+# sha256 of reassembled iso
+#0695e9ce9781e51136e964e755af4f20fa6dbdcd16be5af8a009cb69a910422a `
 
-**Run to verify**
+# Run to verify
 `sha256sum cachyos-macpro-2026.09.16-x86_64.iso`
 
-# Linux/macOS
+# Flash to USB
 sudo dd if=cachyos-macpro-2026.09.16-x86_64.iso` of=/dev/sdX bs=4M status=progress && sync
 
 # Or use balenaEtcher / Rufus (Windows)

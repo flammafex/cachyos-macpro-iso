@@ -1,0 +1,9 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        action.lookup("program") == "/usr/lib/macpro61-support/macpro-gpu-mode" &&
+        subject.active &&
+        subject.local &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});

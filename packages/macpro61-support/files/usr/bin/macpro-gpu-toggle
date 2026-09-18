@@ -1,0 +1,73 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+get_mode() {
+    local states=()
+    local state device_dir
+
+    for state in /sys/class/drm/card[0-9]*/device/power_dpm_state; do
+        [[ -r "$state" ]] || continue
+
+        device_dir="${state%/power_dpm_state}"
+        [[ -r "$device_dir/vendor" ]] || continue
+        [[ "$(<"$device_dir/vendor")" == "0x1002" ]] || continue
+
+        states+=("$(<"$state")")
+    done
+
+    ((${#states[@]})) || return 1
+
+    # Report performance only if every relevant GPU is in performance.
+    for state in "${states[@]}"; do
+        if [[ "$state" != "performance" ]]; then
+            printf '%s\n' balanced
+            return
+        fi
+    done
+
+    printf '%s\n' performance
+}
+
+requested="${1:-toggle}"
+
+case "$requested" in
+    toggle)
+        current="$(get_mode)"
+        if [[ "$current" == "performance" ]]; then
+            target=balanced
+        else
+            target=performance
+        fi
+        ;;
+    balanced|performance)
+        target="$requested"
+        ;;
+    *)
+        echo "Usage: $0 {toggle|balanced|performance}" >&2
+        exit 2
+        ;;
+esac
+
+if pkexec /usr/lib/macpro61-support/macpro-gpu-mode "$target" >/dev/null; then
+    case "$target" in
+        performance)
+            notify-send \
+                --icon=video-display \
+                "Mac Pro GPU" \
+                "Performance mode — GPUs at full VBIOS clocks"
+            ;;
+        balanced)
+            notify-send \
+                --icon=video-display \
+                "Mac Pro GPU" \
+                "Balanced mode — normal GPU power management"
+            ;;
+    esac
+else
+    notify-send \
+        --urgency=critical \
+        --icon=dialog-error \
+        "Mac Pro GPU" \
+        "Could not change GPU power mode"
+    exit 1
+fi

@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+case "${1:-}" in
+    balanced|performance)
+        mode="$1"
+        ;;
+    *)
+        echo "Usage: $0 {balanced|performance}" >&2
+        exit 2
+        ;;
+esac
+
+# This helper is specifically for the Mac Pro 6,1.
+if [[ "$(cat /sys/class/dmi/id/product_name 2>/dev/null || true)" != "MacPro6,1" ]]; then
+    echo "This system is not a MacPro6,1." >&2
+    exit 1
+fi
+
+found=0
+
+for state in /sys/class/drm/card[0-9]*/device/power_dpm_state; do
+    [[ -e "$state" ]] || continue
+
+    device_dir="${state%/power_dpm_state}"
+
+    # AMD PCI vendor ID.
+    [[ -r "$device_dir/vendor" ]] || continue
+    [[ "$(<"$device_dir/vendor")" == "0x1002" ]] || continue
+
+    printf '%s\n' "$mode" > "$state"
+    found=$((found + 1))
+done
+
+if (( found == 0 )); then
+    echo "No AMD GPUs exposing power_dpm_state were found." >&2
+    exit 1
+fi
+
+printf '%s\n' "$mode"

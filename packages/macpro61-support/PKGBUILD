@@ -1,10 +1,10 @@
 pkgname=macpro61-support
 pkgver=1
-pkgrel=8
-pkgdesc='Durable Mac Pro 6,1 boot, fan, and hardware policy'
+pkgrel=9
+pkgdesc='Durable Mac Pro 6,1 boot, fan, GPU, and hardware policy'
 arch=('x86_64')
 license=('GPL')
-depends=('linux-macpro61' 'macfanctld' 'systemd>=258' 'util-linux' 'coreutils' 'bash' 'kmod')
+depends=('linux-macpro61' 'macfanctld' 'systemd>=258' 'util-linux' 'coreutils' 'bash' 'kmod' 'polkit' 'libnotify')
 
 package() {
     local files="$startdir/files"
@@ -12,7 +12,16 @@ package() {
     install -Dm755 "$files/usr/lib/macpro61-support/macpro61-fan-preflight" \
         "$pkgdir/usr/lib/macpro61-support/macpro61-fan-preflight"
     install -Dm755 "$files/usr/lib/macpro61-support/macpro61-bootctl" \
-        "$pkgdir/usr/lib/macpro61-support/macpro61-bootctl"
+        "$pkgdir/usr/lib/macpro61-support/macpro61-bootctl" \
+        # Mac Pro GPU power-mode control.
+    install -Dm755 "$files/usr/lib/macpro61-support/macpro-gpu-mode" \
+        "$pkgdir/usr/lib/macpro61-support/macpro-gpu-mode"
+    install -Dm755 "$files/usr/bin/macpro-gpu-toggle" \
+        "$pkgdir/usr/bin/macpro-gpu-toggle"
+    install -Dm644 "$files/etc/polkit-1/rules.d/49-macpro61-gpu-mode.rules" \
+        "$pkgdir/etc/polkit-1/rules.d/49-macpro61-gpu-mode.rules"
+    install -Dm644 "$files/usr/share/applications/macpro-gpu-mode.desktop" \
+        "$pkgdir/usr/share/applications/macpro-gpu-mode.desktop"
 
     for file in \
         macpro-audio.conf \

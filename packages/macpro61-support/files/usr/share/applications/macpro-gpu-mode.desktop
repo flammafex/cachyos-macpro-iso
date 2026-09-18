@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=Mac Pro GPU Mode
+Comment=Toggle Mac Pro GPUs between Balanced and Performance
+Icon=video-display
+Exec=/usr/bin/macpro-gpu-toggle toggle
+Terminal=false
+Categories=System;Settings;
+Actions=Performance;Balanced;
+
+[Desktop Action Performance]
+Name=GPU Performance
+Icon=video-display
+Exec=/usr/bin/macpro-gpu-toggle performance
+
+[Desktop Action Balanced]
+Name=GPU Balanced
+Icon=video-display
+Exec=/usr/bin/macpro-gpu-toggle balanced

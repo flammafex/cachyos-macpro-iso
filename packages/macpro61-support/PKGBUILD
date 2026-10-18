@@ -1,6 +1,6 @@
 pkgname=macpro61-support
 pkgver=1
-pkgrel=9
+pkgrel=10
 pkgdesc='Durable Mac Pro 6,1 boot, fan, GPU, and hardware policy'
 arch=('x86_64')
 license=('GPL')
@@ -33,6 +33,8 @@ package() {
     for hook in "$files"/etc/pacman.d/hooks/*.hook; do
         install -Dm644 "$hook" "$pkgdir/etc/pacman.d/hooks/${hook##*/}"
     done
+    install -Dm644 "$files/usr/lib/sdboot-manage.conf.d/90-macpro61-support.conf" \
+        "$pkgdir/usr/lib/sdboot-manage.conf.d/90-macpro61-support.conf"
     install -Dm644 \
         "$files/etc/systemd/system/macfanctld.service.d/10-macpro61-support.conf" \
         "$pkgdir/etc/systemd/system/macfanctld.service.d/10-macpro61-support.conf"

@@ -47,16 +47,33 @@ free_bytes() {
     printf '%s\n' "$available"
 }
 
+estimate_required_bytes() {
+    local kernel_size=$1 initramfs_size=$2
+    local initramfs_temp_size=$(( (initramfs_size * 5 + 3) / 4 ))
+    local metadata_margin=$(( 4 * 1024 * 1024 ))
+    printf '%s\n' "$(( kernel_size + initramfs_temp_size + metadata_margin ))"
+}
+
+require_estimated_space() {
+    local kernel_size=$1 initramfs_size=$2 available=$3
+    local initramfs_temp_size=$(( (initramfs_size * 5 + 3) / 4 ))
+    local metadata_margin=$(( 4 * 1024 * 1024 ))
+    local required
+    required=$(estimate_required_bytes "$kernel_size" "$initramfs_size")
+    (( available >= required )) || die "insufficient free space on $ESP for estimated replacement (old kernel: $kernel_size bytes + temporary initramfs estimate at 125% of old image: $initramfs_temp_size bytes + metadata margin: $metadata_margin bytes = $required bytes required; $available bytes available). This estimate uses current image sizes and cannot guarantee space for the future images. Free space on the ESP before retrying."
+}
+
 require_kernel_space() {
     [[ -r $KERNEL && -s $KERNEL ]] || die "missing existing $KERNEL"
     [[ -r $INITRAMFS && -s $INITRAMFS ]] || die "missing existing $INITRAMFS"
 
-    local kernel_size initramfs_size required available
+    local kernel_size initramfs_size available
     kernel_size=$(stat -c %s -- "$KERNEL") || die "cannot stat $KERNEL"
     initramfs_size=$(stat -c %s -- "$INITRAMFS") || die "cannot stat $INITRAMFS"
-    required=$(( (kernel_size + initramfs_size) * 2 + 64 * 1024 * 1024 ))
+    # mkinitcpio writes a temporary initramfs alongside the old image. This is
+    # an estimate based on today's files, not a guarantee for future image sizes.
     available=$(free_bytes) || die "cannot determine free space on $ESP"
-    (( available >= required )) || die "insufficient free space on $ESP (need $required bytes, have $available)"
+    require_estimated_space "$kernel_size" "$initramfs_size" "$available"
 }
 
 guard() {
@@ -377,7 +394,6 @@ require_rollback() {
 
 verify() {
     require_esp
-    cleanup_loader_entries
 
     [[ ! -e $OBSOLETE_SYSTEMD_BOOT && ! -L $OBSOLETE_SYSTEMD_BOOT ]] ||
         die "obsolete standalone systemd-boot remains at $OBSOLETE_SYSTEMD_BOOT"
@@ -416,4 +432,6 @@ main() {
     esac
 }
 
-main "$@"
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi

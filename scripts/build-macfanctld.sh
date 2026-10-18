@@ -31,7 +31,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOURCE_DIR="${MACFANCTLD_SOURCE_DIR:-$PROJECT_DIR/../macfanctld}"
 LOCAL_REPO="$PROJECT_DIR/local-repo"
 PKGVER="${MACFANCTLD_PKGVER:-0.6}"
-PKGREL="${MACFANCTLD_PKGREL:-3}"
+PKGREL="${MACFANCTLD_PKGREL:-4}"
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
     printf 'Usage: MACFANCTLD_SOURCE_DIR=/path/to/macfanctld %s\n' "${BASH_SOURCE[0]}"
